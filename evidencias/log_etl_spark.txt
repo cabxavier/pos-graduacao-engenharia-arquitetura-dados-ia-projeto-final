@@ -1,0 +1,113 @@
+========================================================================
+CAMADA BRONZE — leitura dos JSON brutos (formato Kafka Connect S3 Sink)
+========================================================================
+Bronze IPCA: 364 registros | Bronze PRE: 300 registros
+Schema (Data_* e dt_update como epoch ms / bigint):
+root
+ |-- CompraManha: double (nullable = true)
+ |-- Data_Base: long (nullable = true)
+ |-- Data_Vencimento: long (nullable = true)
+ |-- PUBaseManha: double (nullable = true)
+ |-- PUCompraManha: double (nullable = true)
+ |-- PUVendaManha: double (nullable = true)
+ |-- Tipo: string (nullable = true)
+ |-- VendaManha: double (nullable = true)
+ |-- dt_update: long (nullable = true)
+
++-----------+-------------+---------------+-----------+-------------+------------+---------------------------------------+----------+-------------+
+|CompraManha|Data_Base    |Data_Vencimento|PUBaseManha|PUCompraManha|PUVendaManha|Tipo                                   |VendaManha|dt_update    |
++-----------+-------------+---------------+-----------+-------------+------------+---------------------------------------+----------+-------------+
+|6.69       |1778457600000|2378419200000  |1001.23    |1002.35      |1000.12     |Tesouro IPCA+ com Juros Semestrais 2045|6.73      |1792368000000|
+|6.62       |1778198400000|2378419200000  |1004.02    |1004.34      |1003.71     |Tesouro IPCA+ com Juros Semestrais 2045|6.69      |1792108800000|
+|6.49       |1778803200000|2062800000000  |1002.36    |1003.21      |1001.51     |Tesouro IPCA+ com Juros Semestrais 2035|6.57      |1792713600000|
+|6.49       |1778716800000|2062800000000  |1000.76    |1001.36      |1000.16     |Tesouro IPCA+ com Juros Semestrais 2035|6.59      |1792627200000|
+|6.59       |1776211200000|2693952000000  |1001.98    |1002.51      |1001.44     |Tesouro IPCA+ com Juros Semestrais 2055|6.68      |1790121600000|
++-----------+-------------+---------------+-----------+-------------+------------+---------------------------------------+----------+-------------+
+only showing top 5 rows
+
+========================================================================
+CAMADA SILVER — descarte de inválidos, dedup por chave de negócio, datas, normalização
+========================================================================
+[IPCA] bruto=364 | inválidos descartados=1 | duplicatas/versões removidas=3 | Silver final=360
+[PRE] bruto=300 | inválidos descartados=0 | duplicatas/versões removidas=0 | Silver final=300
+
+Schema Silver (datas convertidas):
+root
+ |-- CompraManha: double (nullable = true)
+ |-- Data_Base: date (nullable = true)
+ |-- Data_Vencimento: date (nullable = true)
+ |-- PUBaseManha: double (nullable = true)
+ |-- PUCompraManha: double (nullable = true)
+ |-- PUVendaManha: double (nullable = true)
+ |-- Tipo: string (nullable = true)
+ |-- VendaManha: double (nullable = true)
+ |-- dt_update: string (nullable = true)
+
+Amostra Silver IPCA:
++-----------+----------+---------------+-----------+-------------+------------+---------------------------------------+----------+-------------------+
+|CompraManha|Data_Base |Data_Vencimento|PUBaseManha|PUCompraManha|PUVendaManha|Tipo                                   |VendaManha|dt_update          |
++-----------+----------+---------------+-----------+-------------+------------+---------------------------------------+----------+-------------------+
+|6.46       |2026-03-19|2029-05-15     |1002.74    |1003.76      |1001.72     |Tesouro IPCA+ 2029                     |6.55      |2026-08-27 00:00:00|
+|6.52       |2026-03-19|2035-05-15     |994.52     |995.43       |993.6       |Tesouro IPCA+ 2035                     |6.59      |2026-08-27 00:00:00|
+|6.16       |2026-03-19|2026-08-15     |997.66     |998.53       |996.8       |Tesouro IPCA+ 2026                     |6.22      |2026-08-27 00:00:00|
+|6.62       |2026-03-19|2055-05-15     |996.43     |997.49       |995.37      |Tesouro IPCA+ com Juros Semestrais 2055|6.67      |2026-08-27 00:00:00|
+|6.48       |2026-03-19|2035-05-15     |991.5      |992.0        |991.01      |Tesouro IPCA+ com Juros Semestrais 2035|6.54      |2026-08-27 00:00:00|
++-----------+----------+---------------+-----------+-------------+------------+---------------------------------------+----------+-------------------+
+only showing top 5 rows
+
+Silver gravada em Parquet: evidencias/lakehouse/ipca/silver e evidencias/lakehouse/pre/silver
+
+========================================================================
+CAMADA GOLD — agregações analíticas por tipo de título
+========================================================================
+GOLD IPCA:
++---------------------------------------+-------------------+------------------+----------------+------------+------------+---------------+
+|Tipo                                   |Media_PUCompraManha|Media_PUVendaManha|Media_TaxaCompra|Min_PUCompra|Max_PUCompra|Total_Registros|
++---------------------------------------+-------------------+------------------+----------------+------------+------------+---------------+
+|Tesouro IPCA+ 2029                     |996.16             |994.58            |6.4563          |985.74      |1007.04     |60             |
+|Tesouro IPCA+ 2026                     |996.26             |994.82            |6.1             |987.42      |1007.03     |60             |
+|Tesouro IPCA+ com Juros Semestrais 2045|996.32             |994.8             |6.6157          |986.66      |1005.66     |60             |
+|Tesouro IPCA+ 2035                     |997.47             |995.83            |6.6018          |986.77      |1006.03     |60             |
+|Tesouro IPCA+ com Juros Semestrais 2035|996.2              |994.82            |6.5492          |986.45      |1005.58     |60             |
+|Tesouro IPCA+ com Juros Semestrais 2055|996.48             |995.05            |6.6482          |986.42      |1005.83     |60             |
++---------------------------------------+-------------------+------------------+----------------+------------+------------+---------------+
+
+GOLD PRE:
++-------------------------------------------+-------------------+------------------+----------------+------------+------------+---------------+
+|Tipo                                       |Media_PUCompraManha|Media_PUVendaManha|Media_TaxaCompra|Min_PUCompra|Max_PUCompra|Total_Registros|
++-------------------------------------------+-------------------+------------------+----------------+------------+------------+---------------+
+|Tesouro Prefixado com Juros Semestrais 2031|4204.83            |4198.34           |12.0483         |4163.01     |4249.36     |60             |
+|Tesouro Prefixado 2025                     |4205.72            |4198.82           |10.3992         |4165.42     |4250.48     |60             |
+|Tesouro Prefixado 2027                     |4208.4             |4201.88           |11.1993         |4164.28     |4247.13     |60             |
+|Tesouro Prefixado 2029                     |4203.26            |4196.19           |11.8468         |4163.11     |4248.15     |60             |
+|Tesouro Prefixado com Juros Semestrais 2033|4209.43            |4203.13           |12.249          |4162.02     |4250.62     |60             |
++-------------------------------------------+-------------------+------------------+----------------+------------+------------+---------------+
+
+========================================================================
+SPARK SQL — consulta analítica sobre a camada Gold
+========================================================================
++-------------------------------------------+---------------+-------------------+----------------+
+|Tipo                                       |Total_Registros|Media_PUCompraManha|Media_TaxaCompra|
++-------------------------------------------+---------------+-------------------+----------------+
+|Tesouro Prefixado com Juros Semestrais 2033|60             |4209.43            |12.249          |
+|Tesouro Prefixado 2027                     |60             |4208.4             |11.1993         |
+|Tesouro Prefixado 2025                     |60             |4205.72            |10.3992         |
+|Tesouro Prefixado com Juros Semestrais 2031|60             |4204.83            |12.0483         |
+|Tesouro Prefixado 2029                     |60             |4203.26            |11.8468         |
+|Tesouro IPCA+ 2035                         |60             |997.47             |6.6018          |
+|Tesouro IPCA+ com Juros Semestrais 2055    |60             |996.48             |6.6482          |
+|Tesouro IPCA+ com Juros Semestrais 2045    |60             |996.32             |6.6157          |
+|Tesouro IPCA+ 2026                         |60             |996.26             |6.1             |
+|Tesouro IPCA+ com Juros Semestrais 2035    |60             |996.2              |6.5492          |
+|Tesouro IPCA+ 2029                         |60             |996.16             |6.4563          |
++-------------------------------------------+---------------+-------------------+----------------+
+
+========================================================================
+VALIDAÇÃO — Parquet relido
+========================================================================
+  evidencias/lakehouse/ipca/silver: 360 registros (relido OK)
+  evidencias/lakehouse/pre/silver: 300 registros (relido OK)
+  evidencias/lakehouse/ipca/gold: 6 registros (relido OK)
+  evidencias/lakehouse/pre/gold: 5 registros (relido OK)
+
+ETL concluído com sucesso.

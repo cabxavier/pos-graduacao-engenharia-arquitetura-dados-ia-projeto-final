@@ -1,0 +1,15 @@
+services:
+  jupyter-spark:
+    image: jupyter/pyspark-notebook:spark-3.5.0
+    container_name: jupyter-spark
+    ports:
+      - "8899:8888"     # host 8899 -> container 8888 (evita conflito com Anaconda local)
+      - "4040:4040"     # Spark UI
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      JUPYTER_TOKEN: "tesouro"   # token fixo e conhecido (sem precisar caçar no log)
+      # Credenciais AWS para o s3a (leitura/escrita no S3)
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+    volumes:
+      - ../notebooks:/home/jovyan/work

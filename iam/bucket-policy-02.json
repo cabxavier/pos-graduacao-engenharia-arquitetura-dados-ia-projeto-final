@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowWriteAccess",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::<ACCOUNT_ID>:user/<USUARIO_IAM>" },
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::my-bucket-cabxavier-02",
+        "arn:aws:s3:::my-bucket-cabxavier-02/*"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Ambiente conda estável para o desafio (evita o problema de Python 3.14/uv).
+#   conda env create -f environment.yml
+#   conda activate tesouro
+#   python -m ipykernel install --user --name tesouro --display-name "Python (tesouro)"
+name: tesouro
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - pandas
+  - sqlalchemy
+  - psycopg2-binary
+  - requests
+  - jupyter
+  - ipykernel
+  - pyspark=3.5.1
+  - openjdk=11

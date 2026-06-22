@@ -1,0 +1,240 @@
+# ============================================================================
+# CREDENCIAIS E SEGURANÇA
+# ============================================================================
+.env
+.env_*
+.env.local
+.env.*.local
+!.env.example
+!.env_kafka_connect.example
+*.pgpass
+.netrc
+credentials.json
+secrets.json
+*.key.json
+
+# ============================================================================
+# CONFIGURAÇÃO COM DADOS SENSÍVEIS
+# ============================================================================
+connectors/**/*.config
+!connectors/**/*.config.example
+postgres/.env
+spark/.env
+!spark/.env.example
+
+# ============================================================================
+# CHAVES CRIPTOGRÁFICAS E CERTIFICADOS
+# ============================================================================
+*.pem
+*.key
+*.crt
+*.cert
+*.p7b
+*.pfx
+*.p12
+*.jks
+*.keystore
+
+# ============================================================================
+# DADOS SENSÍVEIS E ARQUIVOS DE SAÍDA
+# ============================================================================
+data/
+data_local/
+output/
+outputs/
+results/
+lakehouse/
+processed_data/
+raw_data/
+*.csv
+*.xlsx
+*.xls
+!data/README.md
+!data/exemplo*.csv
+
+# Exceção: evidencias/ é PROVA de execução e DEVE ser versionada
+# (o padrão lakehouse/ acima a excluiria por engano).
+!evidencias/
+!evidencias/**
+
+# ============================================================================
+# PYTHON / JUPYTER / CONDA
+# ============================================================================
+.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+*.pot
+*.mo
+.env/
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+Pipfile.lock
+poetry.lock
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================================================
+# IDE E EDITORES
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+.AppleDouble
+.LSOverride
+*.code-workspace
+*.iml
+.classpath
+.project
+.settings/
+*.sublime-*
+.vagrant
+.vagrant/
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+docker-compose.override.yml
+.dockerignore
+docker-sync.yml
+docker-sync/
+
+# ============================================================================
+# LOGS E CACHE
+# ============================================================================
+*.log
+logs/
+*.log.*
+.log
+debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+*.tmp
+*.temp
+*.cache
+.cache/
+*.pid
+*.seed
+
+# ============================================================================
+# SPARK / HADOOP / HADOOP-AWS
+# ============================================================================
+.spark-*
+metastore_db/
+derby.log
+*.metastore_db/
+hive_metastore/
+.yarn_cache/
+.spark_cache/
+checkpoint/
+temp/
+
+# ============================================================================
+# DADOS KAFKA E EVENTOS
+# ============================================================================
+kafka-logs/
+*.offset
+*.state
+offsets/
+
+# ============================================================================
+# JUPYTER / IPYTHON
+# ============================================================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+profile_default/
+ipython_config.py
+.jupyter/
+.jupyterlab/
+
+# ============================================================================
+# DOCUMENTAÇÃO GERADA
+# ============================================================================
+site/
+docs/_build/
+build/docs/
+
+# ============================================================================
+# SISTEMA OPERACIONAL
+# ============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.files/
+.AppleDouble
+
+# ============================================================================
+# NODE (se usar npm/yarn para qualquer coisa)
+# ============================================================================
+node_modules/
+npm-debug.log
+yarn-error.log
+.npm/
+
+# ============================================================================
+# SHELL / BASH
+# ============================================================================
+*.sh.bak
+.bash_history
+.zsh_history
+.fish_history
+
+# ============================================================================
+# ARQUIVOS TEMPORÁRIOS
+# ============================================================================
+*.bak
+*.backup
+*.tmp
+*.temp
+*.swp
+*~
+.#*
+\#*#
+
+# ============================================================================
+# ARQUIVOS DE SINCRONIZAÇÃO
+# ============================================================================
+.sync/
+.syncthing-ignore

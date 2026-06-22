@@ -1,0 +1,118 @@
+# =====================================================================
+# Plataforma Confluent completa:
+#   Zookeeper, Kafka Broker, Schema Registry, Kafka Connect (imagem
+#   custom connect-custom:1.0.0), ksqlDB (server + cli) e REST Proxy.
+#
+# Pré-requisitos:
+#   1) docker network create tesouro-net   (uma vez)
+#   2) construir a imagem custom:
+#        cd custom-kafka-connector-image && docker buildx build . -t connect-custom:1.0.0
+#   3) docker-compose up -d
+# =====================================================================
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks: [tesouro-net]
+
+  broker:
+    image: confluentinc/cp-server:7.5.0
+    container_name: broker
+    depends_on: [zookeeper]
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    networks: [tesouro-net]
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.0
+    container_name: schema-registry
+    depends_on: [broker]
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "broker:29092"
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    networks: [tesouro-net]
+
+  connect:
+    image: connect-custom:1.0.0
+    container_name: connect
+    depends_on: [broker, schema-registry]
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env_kafka_connect          # injeta AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "broker:29092"
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      CONNECT_GROUP_ID: connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+    networks: [tesouro-net]
+
+  ksqldb-server:
+    image: confluentinc/cp-ksqldb-server:7.5.0
+    container_name: ksqldb-server
+    depends_on: [broker, connect]
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_BOOTSTRAP_SERVERS: "broker:29092"
+      KSQL_HOST_NAME: ksqldb-server
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_KSQL_CONNECT_URL: "http://connect:8083"
+    networks: [tesouro-net]
+
+  ksqldb-cli:
+    image: confluentinc/cp-ksqldb-cli:7.5.0
+    container_name: ksqldb-cli
+    depends_on: [ksqldb-server]
+    entrypoint: /bin/sh
+    tty: true
+    networks: [tesouro-net]
+
+  rest-proxy:
+    image: confluentinc/cp-kafka-rest:7.5.0
+    container_name: rest-proxy
+    depends_on: [broker, schema-registry]
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_REST_HOST_NAME: rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: "broker:29092"
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+    networks: [tesouro-net]
+
+networks:
+  tesouro-net:
+    external: true

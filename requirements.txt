@@ -1,0 +1,8 @@
+# Alternativa via pip (use dentro de um venv/conda com Python 3.11).
+pandas
+SQLAlchemy
+psycopg2-binary
+requests
+jupyter
+ipykernel
+pyspark==3.5.1
